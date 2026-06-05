@@ -1,0 +1,3 @@
+com\ecommerce\auth\domain\repository\UserRepository.class
+com\ecommerce\auth\domain\entity\User$UserBuilder.class
+com\ecommerce\auth\domain\entity\User.class

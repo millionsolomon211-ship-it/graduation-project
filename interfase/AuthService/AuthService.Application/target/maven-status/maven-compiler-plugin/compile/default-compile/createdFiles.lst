@@ -1,0 +1,11 @@
+com\ecommerce\auth\application\ports\EventPublisher.class
+com\ecommerce\auth\application\service\AuthApplicationService.class
+com\ecommerce\auth\application\ports\PasswordEncoderPort.class
+com\ecommerce\auth\application\dto\LoginRequest.class
+com\ecommerce\auth\application\dto\AuthResponse.class
+com\ecommerce\auth\application\usecase\LoginUseCase.class
+com\ecommerce\auth\application\dto\RegisterUserRequest.class
+com\ecommerce\auth\application\ports\JwtProvider.class
+com\ecommerce\auth\application\usecase\RefreshTokenUseCase.class
+com\ecommerce\auth\application\dto\AuthResponse$AuthResponseBuilder.class
+com\ecommerce\auth\application\usecase\RegisterUserUseCase.class
