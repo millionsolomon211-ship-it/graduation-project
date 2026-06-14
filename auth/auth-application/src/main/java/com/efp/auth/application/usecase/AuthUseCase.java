@@ -1,9 +1,9 @@
-package com.insa.auth.application.usecase;
+package com.efp.auth.application.usecase;
 
-import com.insa.auth.application.dto.AuthResponse;
-import com.insa.auth.application.dto.LoginRequest;
-import com.insa.auth.application.dto.RegisterRequest;
-import com.insa.auth.application.dto.ResetPasswordRequest;
+import com.efp.auth.application.dto.AuthResponse;
+import com.efp.auth.application.dto.LoginRequest;
+import com.efp.auth.application.dto.RegisterRequest;
+import com.efp.auth.application.dto.ResetPasswordRequest;
 
 public interface AuthUseCase {
     AuthResponse register(RegisterRequest request);

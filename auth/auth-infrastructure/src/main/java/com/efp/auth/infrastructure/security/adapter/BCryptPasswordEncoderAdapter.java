@@ -1,6 +1,6 @@
-package com.insa.auth.infrastructure.security.adapter;
+package com.efp.auth.infrastructure.security.adapter;
 
-import com.insa.auth.application.ports.PasswordEncoderPort;
+import com.efp.auth.application.ports.PasswordEncoderPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

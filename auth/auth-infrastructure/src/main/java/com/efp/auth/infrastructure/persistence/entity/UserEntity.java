@@ -1,4 +1,4 @@
-package com.insa.auth.infrastructure.persistence.entity;
+package com.efp.auth.infrastructure.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,4 +1,4 @@
-package com.insa.auth.application.ports;
+package com.efp.auth.application.ports;
 
 public interface PasswordEncoderPort {
     String encode(String rawPassword);

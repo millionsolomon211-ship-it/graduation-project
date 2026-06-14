@@ -1,4 +1,4 @@
-package com.insa.auth.application.dto;
+package com.efp.auth.application.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

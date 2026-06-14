@@ -1,4 +1,4 @@
-package com.insa.auth.infrastructure.security.config;
+package com.efp.auth.infrastructure.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package com.insa.auth.domain.model;
+package com.efp.auth.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

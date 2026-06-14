@@ -1,6 +1,6 @@
-package com.insa.auth.infrastructure.persistence.repository;
+package com.efp.auth.infrastructure.persistence.repository;
 
-import com.insa.auth.infrastructure.persistence.entity.UserEntity;
+import com.efp.auth.infrastructure.persistence.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

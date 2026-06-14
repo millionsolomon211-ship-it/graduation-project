@@ -1,14 +1,14 @@
-package com.insa.auth.application.service;
+package com.efp.auth.application.service;
 
-import com.insa.auth.application.dto.AuthResponse;
-import com.insa.auth.application.dto.LoginRequest;
-import com.insa.auth.application.dto.RegisterRequest;
-import com.insa.auth.application.dto.ResetPasswordRequest;
-import com.insa.auth.application.ports.PasswordEncoderPort;
-import com.insa.auth.application.ports.TokenProvider;
-import com.insa.auth.application.usecase.AuthUseCase;
-import com.insa.auth.domain.model.User;
-import com.insa.auth.domain.repository.UserRepository;
+import com.efp.auth.application.dto.AuthResponse;
+import com.efp.auth.application.dto.LoginRequest;
+import com.efp.auth.application.dto.RegisterRequest;
+import com.efp.auth.application.dto.ResetPasswordRequest;
+import com.efp.auth.application.ports.PasswordEncoderPort;
+import com.efp.auth.application.ports.TokenProvider;
+import com.efp.auth.application.usecase.AuthUseCase;
+import com.efp.auth.domain.model.User;
+import com.efp.auth.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

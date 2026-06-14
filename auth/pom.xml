@@ -8,12 +8,12 @@
 		<version>3.2.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.insa</groupId>
+	<groupId>com.efp</groupId>
 	<artifactId>auth-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>auth-parent</name>
-	<description>Auth Microservice Parent for INSA Project</description>
+	<description>Auth Microservice Parent for Ethiopia Federal Police Project</description>
 
 	<modules>
 		<module>auth-domain</module>
@@ -30,17 +30,17 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.insa</groupId>
+				<groupId>com.efp</groupId>
 				<artifactId>auth-domain</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.insa</groupId>
+				<groupId>com.efp</groupId>
 				<artifactId>auth-application</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.insa</groupId>
+				<groupId>com.efp</groupId>
 				<artifactId>auth-infrastructure</artifactId>
 				<version>${project.version}</version>
 			</dependency>

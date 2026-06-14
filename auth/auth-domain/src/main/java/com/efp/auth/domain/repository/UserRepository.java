@@ -1,6 +1,6 @@
-package com.insa.auth.domain.repository;
+package com.efp.auth.domain.repository;
 
-import com.insa.auth.domain.model.User;
+import com.efp.auth.domain.model.User;
 import java.util.Optional;
 
 public interface UserRepository {

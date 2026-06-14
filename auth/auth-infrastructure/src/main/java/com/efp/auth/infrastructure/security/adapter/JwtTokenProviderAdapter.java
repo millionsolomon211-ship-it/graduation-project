@@ -1,6 +1,6 @@
-package com.insa.auth.infrastructure.security.adapter;
+package com.efp.auth.infrastructure.security.adapter;
 
-import com.insa.auth.application.ports.TokenProvider;
+import com.efp.auth.application.ports.TokenProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

@@ -1,9 +1,9 @@
-package com.insa.auth.infrastructure.persistence.adapter;
+package com.efp.auth.infrastructure.persistence.adapter;
 
-import com.insa.auth.domain.model.User;
-import com.insa.auth.domain.repository.UserRepository;
-import com.insa.auth.infrastructure.persistence.entity.UserEntity;
-import com.insa.auth.infrastructure.persistence.repository.JpaUserRepository;
+import com.efp.auth.domain.model.User;
+import com.efp.auth.domain.repository.UserRepository;
+import com.efp.auth.infrastructure.persistence.entity.UserEntity;
+import com.efp.auth.infrastructure.persistence.repository.JpaUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
