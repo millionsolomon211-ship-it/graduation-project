@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f1f5f9;
+  --foreground: #020617;
+  --primary: #0f172a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+@layer components {
+  .btn-admin {
+    @apply bg-[#0f172a] hover:bg-[#1e293b] text-white font-medium py-2 px-4 rounded transition-all active:scale-95;
+  }
+  
+  .card-stat {
+    @apply bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow;
+  }
+}
