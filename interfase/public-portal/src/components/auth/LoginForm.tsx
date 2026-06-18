@@ -1,48 +1,81 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { initKeycloak } from '@/lib/keycloak';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8080";
+const KEYCLOAK_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "master";
+const KEYCLOAK_CLIENT_ID = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "public-portal";
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
+  const [kcLoading, setKcLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Optionally check if keycloak-js already has a session
+    initKeycloak().then((kc) => {
+      if (kc?.authenticated) {
+        document.cookie = `auth_token=${kc.token}; path=/; max-age=3600`;
+        router.push('/dashboard');
+      }
+    });
+  }, [router]);
+
+  // Option 1: Direct Access Grant (Authenticating via custom UI securely)
+  const handleCustomLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    
     try {
-      // Mock or real API call
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'password',
+          client_id: KEYCLOAK_CLIENT_ID,
+          username: formData.username,
+          password: formData.password,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error_description || 'Invalid credentials');
+      }
+
+      const data = await response.json();
       
-      // Allow for mock success if API isn't ready
-      // if (!response.ok) throw new Error('Invalid credentials');
-      
-      // Simulate auth success by setting a cookie
-      document.cookie = "auth_token=authenticated; path=/; max-age=3600";
-      
-      // Redirect to dashboard
+      // Store token securely (cookie mechanism matches middleware)
+      document.cookie = `auth_token=${data.access_token}; path=/; max-age=3600`;
       router.push('/dashboard');
+      
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
-      
-      // For demonstration of UI flow even without backend:
-      document.cookie = "auth_token=authenticated; path=/; max-age=3600";
-      router.push('/dashboard');
+      setError(err.message || 'Login failed. Please confirm Keycloak is running.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Option 2: Use Official Keycloak-JS Redirect Flow
+  const handleKeycloakRedirectLogin = async () => {
+    setKcLoading(true);
+    try {
+      const kc = await initKeycloak();
+      if (kc) {
+        await kc.login();
+      }
+    } catch (err) {
+      console.error(err);
+      setKcLoading(false);
     }
   };
 
@@ -53,7 +86,7 @@ export default function LoginForm() {
         transition={{ duration: 0.55, ease: 'easeOut' }}
         style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '380px' }}
       >
-        <form className="uiverse-form" onSubmit={handleSubmit}>
+        <form className="uiverse-form" onSubmit={handleCustomLogin}>
           {/* Logo/Badge */}
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5em' }}>
             <div style={{
@@ -70,6 +103,20 @@ export default function LoginForm() {
           </div>
 
           <p className="uiverse-heading">Login</p>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <button 
+              type="button" 
+              className="uiverse-button2" 
+              onClick={handleKeycloakRedirectLogin} 
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              disabled={kcLoading}
+            >
+              {kcLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+              Secure Keycloak SSO Redirect
+            </button>
+            <div style={{ textAlign: "center", color: "#64748b", fontSize: "0.8em", marginTop: "10px" }}>OR USE CUSTOM UI</div>
+          </div>
 
           {/* Username */}
           <div className="uiverse-field">
@@ -135,3 +182,4 @@ export default function LoginForm() {
       </motion.div>
   );
 }
+
