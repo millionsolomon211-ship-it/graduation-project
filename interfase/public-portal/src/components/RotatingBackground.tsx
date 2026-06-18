@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const backgrounds = [
+const BACKGROUNDS = [
   '/bg/police_security_bg_1_1781769733964.png',
   '/bg/police_security_bg_2_1781769745084.png',
   '/bg/police_security_bg_3_1781769754369.png',
@@ -11,29 +11,43 @@ const backgrounds = [
 ];
 
 export default function RotatingBackground() {
-  const [index, setIndex] = useState(0);
+  const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % backgrounds.length);
-    }, 8000); // Rotate every 8 seconds
-    return () => clearInterval(timer);
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % BACKGROUNDS.length);
+    }, 7000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-20 overflow-hidden bg-black">
-      <AnimatePresence mode="wait">
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        backgroundColor: '#08101f',
+        overflow: 'hidden',
+      }}
+    >
+      <AnimatePresence>
         <motion.div
-          key={index}
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 0.6, scale: 1 }}
+          key={current}
+          initial={{ opacity: 0, scale: 1.08 }}
+          animate={{ opacity: 0.55, scale: 1.0 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 2, ease: "easeInOut" }}
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${backgrounds[index]})` }}
+          transition={{ duration: 1.8, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: `url(${BACKGROUNDS[current]})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
         />
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-60" />
+      {/* Dark gradient overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'linear-gradient(to bottom, rgba(8,16,31,0.5) 0%, rgba(8,16,31,0.3) 50%, rgba(8,16,31,0.6) 100%)',
+      }} />
     </div>
   );
 }
