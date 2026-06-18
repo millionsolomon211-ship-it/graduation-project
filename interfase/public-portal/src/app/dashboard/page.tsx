@@ -4,7 +4,16 @@ import React from 'react';
 import { Shield, Home, FileText, Settings, LogOut, Bell, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { useRouter } from 'next/navigation';
+
 export default function DashboardPage() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    router.push('/login');
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] flex">
       {/* Sidebar */}
@@ -22,7 +31,9 @@ export default function DashboardPage() {
         </nav>
 
         <div className="pt-6 border-t border-white/10">
-          <NavItem icon={<LogOut className="w-5 h-5" />} label="Sign Out" />
+          <button onClick={handleLogout} className="w-full">
+            <NavItem icon={<LogOut className="w-5 h-5" />} label="Sign Out" />
+          </button>
         </div>
       </aside>
 
