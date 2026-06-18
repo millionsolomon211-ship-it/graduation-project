@@ -2,147 +2,106 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Shield, User, Mail, Lock, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import RotatingBackground from '@/components/RotatingBackground';
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ fullName: '', email: '', password: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simple validation
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetch(`${GATEWAY_URL}/api/auth/register`, {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.fullName,
-          email: formData.email,
-          password: formData.password
-        }),
+        body: JSON.stringify(formData),
       });
       
       const data = await response.json();
-      console.log('Registration attempt:', data);
-      
-      // Redirect to verification or handle success
+      console.log('Signup attempt:', data);
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.error('Signup failed:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden py-10">
-      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px]"></div>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <RotatingBackground />
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg p-8 glass-card rounded-2xl z-10 mx-4"
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-sm"
       >
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-4">
-            <Shield className="text-white w-7 h-7" />
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Join the Portal</h1>
-          <p className="text-slate-400 text-sm">Register your citizen identity safely</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">Full Name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-              <input 
-                type="text"
-                required
-                className="input-field pl-11 text-white bg-white/5 border-white/10"
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              />
-            </div>
+        <form className="uiverse-form" onSubmit={handleSubmit}>
+          <p className="uiverse-heading">Create Account</p>
+          
+          <div className="uiverse-field">
+            <User className="text-white" size={18} />
+            <input 
+              placeholder="Full Name" 
+              className="uiverse-input-field" 
+              type="text" 
+              required
+              value={formData.fullName}
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-              <input 
-                type="email"
-                required
-                className="input-field pl-11 text-white bg-white/5 border-white/10"
-                placeholder="name@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
+          <div className="uiverse-field">
+            <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z"></path>
+            </svg>
+            <input 
+              placeholder="Email Address" 
+              className="uiverse-input-field" 
+              type="email" 
+              required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                <input 
-                  type="password"
-                  required
-                  className="input-field pl-11 text-white bg-white/5 border-white/10"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Confirm</label>
-              <div className="relative">
-                <CheckCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-                <input 
-                  type="password"
-                  required
-                  className="input-field pl-11 text-white bg-white/5 border-white/10"
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-4">
+          <div className="uiverse-field relative">
+            <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
+            </svg>
+            <input 
+              placeholder="Password" 
+              className="uiverse-input-field" 
+              type={showPassword ? "text" : "password"} 
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            />
             <button 
-              type="submit" 
-              disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary to-primary-light border-none"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 text-slate-400 hover:text-white transition-colors"
             >
-              {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
-                <>
-                  Register Account <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-        </form>
 
-        <p className="mt-8 text-center text-sm text-slate-400">
-          Already have an account?{' '}
-          <Link href="/login" className="text-accent font-semibold hover:underline">Log in here</Link>
-        </p>
+          <div className="uiverse-btn-group">
+            <button type="submit" disabled={loading} className="uiverse-button1">
+              {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : 'Register'}
+            </button>
+            <Link href="/login" className="uiverse-button2 flex items-center justify-center">
+              Login
+            </Link>
+          </div>
+        </form>
       </motion.div>
     </div>
   );

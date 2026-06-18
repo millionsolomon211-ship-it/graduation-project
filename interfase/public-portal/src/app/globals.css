@@ -34,13 +34,113 @@ body {
   }
 }
 
-/* Custom animations */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+/* Uiverse Form Design */
+.uiverse-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2em;
+  background-color: rgba(23, 23, 23, 0.95);
+  border-radius: 25px;
+  transition: .4s ease-in-out;
+  backdrop-blur: 10px;
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.uiverse-form:hover {
+  transform: scale(1.02);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.uiverse-heading {
+  text-align: center;
+  margin: 1em 0 2em 0;
+  color: rgb(255, 255, 255);
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.uiverse-field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8em;
+  border-radius: 25px;
+  padding: 0.8em 1em;
+  border: none;
+  outline: none;
+  color: white;
+  background-color: #171717;
+  box-shadow: inset 2px 5px 10px rgb(5, 5, 5);
+}
+
+.uiverse-input-icon {
+  height: 1.3em;
+  width: 1.3em;
+  fill: white;
+}
+
+.uiverse-input-field {
+  background: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  color: #d3d3d3;
+}
+
+.uiverse-btn-group {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  margin-top: 2.5em;
+  gap: 10px;
+}
+
+.uiverse-button1 {
+  padding: 0.8em 2em;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  transition: .4s ease-in-out;
+  background-color: #003366;
+  color: white;
+  font-weight: bold;
+  flex: 1;
+}
+
+.uiverse-button1:hover {
+  background-color: #00aaff;
+  color: white;
+}
+
+.uiverse-button2 {
+  padding: 0.8em 2em;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  transition: .4s ease-in-out;
+  background-color: #252525;
+  color: white;
+  flex: 1;
+}
+
+.uiverse-button2:hover {
+  background-color: black;
+  color: white;
+}
+
+.uiverse-button3 {
+  margin-top: 1em;
+  padding: 0.5em;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+  transition: .4s ease-in-out;
+  background-color: transparent;
+  color: #64748b;
+  text-decoration: underline;
+  font-size: 0.8em;
+}
+
+.uiverse-button3:hover {
+  color: #ef4444;
 }
