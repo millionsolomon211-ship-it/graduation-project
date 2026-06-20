@@ -3,22 +3,24 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SignupForm() {
-  const [loading, setLoading] = useState(false);
+  const [loading,      setLoading]      = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ fullName: '', email: '', password: '', confirm: '' });
+  const [showConfirm,  setShowConfirm]  = useState(false);
+  const [error,        setError]        = useState('');
+  const [success,      setSuccess]      = useState(false);
+  const [formData,     setFormData]     = useState({
+    firstName: '', lastName: '', email: '', password: '', confirm: '',
+  });
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
     if (formData.password !== formData.confirm) {
       setError('Passwords do not match.');
       return;
@@ -27,137 +29,212 @@ export default function SignupForm() {
       setError('Password must be at least 8 characters.');
       return;
     }
+
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.fullName, email: formData.email, password: formData.password }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password
+        }),
       });
-      // Allow for mock success if API isn't ready
-      // if (!response.ok) throw new Error('Registration failed. Please try again.');
-      
-      router.push('/verify');
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed.');
+      }
+
+      if (data.autoLogin && data.token) {
+         document.cookie = `auth_token=${data.token}; path=/; max-age=3600; SameSite=Lax`;
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        if (data.autoLogin) {
+            router.push('/dashboard');
+        } else {
+            router.push('/login');
+        }
+      }, 1200);
+
     } catch (err: any) {
-      setError(err.message || 'Something went wrong.');
-      // For demonstration of UI flow:
-      router.push('/verify');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const field = (key: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setFormData({ ...formData, [key]: e.target.value });
+
   return (
     <motion.div
-        initial={{ opacity: 0, y: 32 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: 'easeOut' }}
-        style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '380px' }}
-      >
-        <form className="uiverse-form" onSubmit={handleSubmit}>
-          {/* Logo/Badge */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5em' }}>
-            <div style={{
-              width: 52, height: 52,
-              background: 'linear-gradient(135deg, #003366 60%, #00aaff 100%)',
-              borderRadius: 14,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 24px rgba(0,170,255,0.25)',
-            }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-              </svg>
-            </div>
+      initial={{ opacity: 0, y: 32 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: 'easeOut' }}
+      style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '400px' }}
+    >
+      <form className="uiverse-form" onSubmit={handleSubmit}>
+
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5em' }}>
+          <div style={{
+            width: 52, height: 52,
+            background: 'linear-gradient(135deg, #003366 60%, #00aaff 100%)',
+            borderRadius: 14,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 24px rgba(0,170,255,0.25)',
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+            </svg>
           </div>
+        </div>
 
-          <p className="uiverse-heading">Sign Up</p>
+        <p className="uiverse-heading">Create Account</p>
+        <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.8rem', marginBottom: '1rem', marginTop: '-0.5rem' }}>
+          Join the Citizen Portal — it only takes a minute
+        </p>
 
-          {/* Full Name */}
-          <div className="uiverse-field">
+        {/* First + Last name row */}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="uiverse-field" style={{ flex: 1 }}>
             <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/>
             </svg>
             <input
-              autoComplete="off"
-              placeholder="Full Name"
+              autoComplete="given-name"
+              placeholder="First Name"
               className="uiverse-input-field"
               type="text"
               required
-              value={formData.fullName}
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              value={formData.firstName}
+              onChange={field('firstName')}
             />
           </div>
-
-          {/* Email */}
-          <div className="uiverse-field">
-            <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z"></path>
-            </svg>
+          <div className="uiverse-field" style={{ flex: 1 }}>
             <input
-              placeholder="Email Address"
+              autoComplete="family-name"
+              placeholder="Last Name"
               className="uiverse-input-field"
-              type="email"
+              type="text"
               required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              value={formData.lastName}
+              onChange={field('lastName')}
+              style={{ paddingLeft: '0.75rem' }}
             />
           </div>
+        </div>
 
-          {/* Password */}
-          <div className="uiverse-field" style={{ position: 'relative' }}>
-            <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
-            </svg>
-            <input
-              placeholder="Password"
-              className="uiverse-input-field"
-              type={showPassword ? 'text' : 'password'}
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-            <button type="button" onClick={() => setShowPassword(!showPassword)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
+        {/* Email */}
+        <div className="uiverse-field">
+          <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+          </svg>
+          <input
+            placeholder="Email Address"
+            className="uiverse-input-field"
+            type="email"
+            required
+            autoComplete="email"
+            value={formData.email}
+            onChange={field('email')}
+          />
+        </div>
 
-          {/* Confirm Password */}
-          <div className="uiverse-field" style={{ position: 'relative' }}>
-            <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
-            </svg>
-            <input
-              placeholder="Confirm Password"
-              className="uiverse-input-field"
-              type={showConfirm ? 'text' : 'password'}
-              required
-              value={formData.confirm}
-              onChange={(e) => setFormData({ ...formData, confirm: e.target.value })}
-            />
-            <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
-              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
+        {/* Password */}
+        <div className="uiverse-field" style={{ position: 'relative' }}>
+          <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          </svg>
+          <input
+            placeholder="Password (min 8 chars)"
+            className="uiverse-input-field"
+            type={showPassword ? 'text' : 'password'}
+            required
+            autoComplete="new-password"
+            value={formData.password}
+            onChange={field('password')}
+          />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
 
-          {/* Error */}
+        {/* Confirm Password */}
+        <div className="uiverse-field" style={{ position: 'relative' }}>
+          <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+          </svg>
+          <input
+            placeholder="Confirm Password"
+            className="uiverse-input-field"
+            type={showConfirm ? 'text' : 'password'}
+            required
+            autoComplete="new-password"
+            value={formData.confirm}
+            onChange={field('confirm')}
+          />
+          <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
+            {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+
+        {/* Error */}
+        <AnimatePresence>
           {error && (
-            <p style={{ color: '#ff6b6b', fontSize: '0.78rem', textAlign: 'center', margin: '0.25em 0' }}>{error}</p>
+            <motion.p
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              style={{ color: '#ff6b6b', fontSize: '0.78rem', textAlign: 'center', margin: '0.25em 0' }}
+            >
+              {error}
+            </motion.p>
           )}
+        </AnimatePresence>
 
-          {/* Buttons */}
-          <div className="uiverse-btn-group">
-            <button type="submit" disabled={loading} className="uiverse-button1">
-              {loading
-                ? <Loader2 style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} size={18} />
-                : <>Sign Up</>}
+        {/* Success flash */}
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                color: '#4ade80', fontSize: '0.85rem', margin: '0.25em 0' }}
+            >
+              <CheckCircle size={16} /> Account created! Redirecting…
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Buttons */}
+        <div className="uiverse-btn-group">
+          <button type="submit" disabled={loading || success} className="uiverse-button1">
+            {loading
+              ? <Loader2 style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} size={18} />
+              : 'Create Account'}
+          </button>
+          <Link href="/login" style={{ flex: 1 }}>
+            <button type="button" className="uiverse-button2" style={{ width: '100%' }}>
+              Login
             </button>
-            <Link href="/login" style={{ flex: 1 }}>
-              <button type="button" className="uiverse-button2" style={{ width: '100%' }}>Login</button>
-            </Link>
-          </div>
-        </form>
-      </motion.div>
+          </Link>
+        </div>
+
+        <p style={{ textAlign: 'center', color: '#475569', fontSize: '0.72rem', marginTop: '0.75rem' }}>
+          By signing up you agree to our{' '}
+          <Link href="#" style={{ color: '#00aaff', textDecoration: 'none' }}>Terms of Service</Link>
+        </p>
+
+      </form>
+    </motion.div>
   );
 }

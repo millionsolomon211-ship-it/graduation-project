@@ -7,9 +7,9 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { initKeycloak } from '@/lib/keycloak';
 
-const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8080";
-const KEYCLOAK_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "master";
-const KEYCLOAK_CLIENT_ID = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "public-portal";
+const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8081/auth";
+const KEYCLOAK_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "public-citizen-portal";
+const KEYCLOAK_CLIENT_ID = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "civilian-nextjs-web";
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -125,7 +125,7 @@ export default function LoginForm() {
             </svg>
             <input
               autoComplete="off"
-              placeholder="Username"
+              placeholder="Email Address"
               className="uiverse-input-field"
               type="text"
               required

@@ -58,3 +58,6 @@ next-env.d.ts
 # OS files
 .DS_Store
 Thumbs.db
+
+# API Gateway (Nginx binaries)
+API-getway/
