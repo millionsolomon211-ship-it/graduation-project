@@ -6,12 +6,15 @@ const KC_CLIENT = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'civilian-nextjs
 const KC_ADMIN_USER = process.env.KEYCLOAK_ADMIN_USER || 'admin';
 const KC_ADMIN_PASS = process.env.KEYCLOAK_ADMIN_PASS || 'admin';
 
-async function getAdminToken(): Promise<string> {
+async function getAdminToken(clientIp: string): Promise<string> {
   const res = await fetch(
     `${KC_URL}/realms/master/protocol/openid-connect/token`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Forwarded-For': clientIp
+      },
       body: new URLSearchParams({
         grant_type: 'password',
         client_id:  'admin-cli',
@@ -35,8 +38,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
     }
 
+    // Get the client IP from the incoming request headers to forward to Nginx -> Keycloak
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
+
     // 1. Get admin token (server-side only — never exposed to browser)
-    const adminToken = await getAdminToken();
+    const adminToken = await getAdminToken(clientIp);
 
     // 2. Create user in Keycloak
     const createRes = await fetch(
@@ -46,6 +52,7 @@ export async function POST(req: NextRequest) {
         headers: {
           'Content-Type':  'application/json',
           'Authorization': `Bearer ${adminToken}`,
+          'X-Forwarded-For': clientIp,
         },
         body: JSON.stringify({
           firstName,
@@ -75,7 +82,10 @@ export async function POST(req: NextRequest) {
       `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/token`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Forwarded-For': clientIp 
+        },
         body: new URLSearchParams({
           grant_type: 'password',
           client_id:  KC_CLIENT,
