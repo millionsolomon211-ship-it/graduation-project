@@ -5,12 +5,13 @@ import { Shield, Home, FileText, Settings, LogOut, Bell, User } from 'lucide-rea
 import { motion } from 'framer-motion';
 
 import { useRouter } from 'next/navigation';
+import { clearAuthCookies } from '@/lib/auth-client';
 
 export default function DashboardPage() {
   const router = useRouter();
 
   const handleLogout = () => {
-    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    clearAuthCookies();
     router.push('/login');
   };
 

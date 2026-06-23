@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { setAuthCookiesClient } from '@/lib/auth-client';
 
 export default function SignupForm() {
   const [loading,      setLoading]      = useState(false);
@@ -52,15 +53,15 @@ export default function SignupForm() {
       }
 
       if (data.autoLogin && data.token) {
-         document.cookie = `auth_token=${data.token}; path=/; max-age=3600; SameSite=Lax`;
+        setAuthCookiesClient(data.token, data.refreshToken);
       }
 
       setSuccess(true);
       setTimeout(() => {
         if (data.autoLogin) {
-            router.push('/dashboard');
+          router.push('/verify-otp');
         } else {
-            router.push('/login');
+          router.push('/login');
         }
       }, 1200);
 
@@ -210,7 +211,7 @@ export default function SignupForm() {
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 color: '#4ade80', fontSize: '0.85rem', margin: '0.25em 0' }}
             >
-              <CheckCircle size={16} /> Account created! Redirecting…
+              <CheckCircle size={16} /> Account created! Check your email…
             </motion.div>
           )}
         </AnimatePresence>

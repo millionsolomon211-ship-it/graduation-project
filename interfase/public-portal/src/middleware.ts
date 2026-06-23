@@ -1,56 +1,60 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-
-const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth';
-const KEYCLOAK_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'public-citizen-portal';
-
-// Fetch the Public Keys (JWKS) from Keycloak to verify signatures
-const JWKS = createRemoteJWKSet(
-  new URL(`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`)
-);
+import { verifyAuthToken } from '@/lib/auth-tokens';
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
+  const pathname = request.nextUrl.pathname;
 
-  const isProtectedPath = request.nextUrl.pathname.startsWith('/dashboard');
-  const isAuthPath = request.nextUrl.pathname.startsWith('/login') || 
-                     request.nextUrl.pathname.startsWith('/signup');
+  const isProtectedPath = pathname.startsWith('/dashboard');
+  const isAuthPath =
+    pathname.startsWith('/login') || pathname.startsWith('/signup');
+  const isVerifyOtpPath = pathname.startsWith('/verify-otp');
 
-  let validToken = false;
+  const { valid: validToken, emailVerified } = await verifyAuthToken(token);
 
-  if (token) {
-    try {
-      // jwtVerify cryptographically checks the signature AND the 'exp' expiration time
-      await jwtVerify(token, JWKS);
-      validToken = true;
-    } catch (error) {
-      // Signature is invalid, token is expired, or incorrectly formatted
-      validToken = false;
+  if (isProtectedPath) {
+    if (!validToken) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      if (token) response.cookies.delete('auth_token');
+      return response;
     }
+    if (!emailVerified) {
+      return NextResponse.redirect(new URL('/verify-otp', request.url));
+    }
+    return NextResponse.next();
   }
 
-  if (isProtectedPath && !validToken) {
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    if (token) response.cookies.delete('auth_token');
-    return response;
+  if (isVerifyOtpPath) {
+    if (!validToken) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (emailVerified) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    return NextResponse.next();
   }
 
   if (isAuthPath && validToken) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const dest = emailVerified ? '/dashboard' : '/verify-otp';
+    return NextResponse.redirect(new URL(dest, request.url));
   }
-  
+
   if (isAuthPath && token && !validToken) {
-     const response = NextResponse.next();
-     response.cookies.delete('auth_token');
-     return response;
+    const response = NextResponse.next();
+    response.cookies.delete('auth_token');
+    response.cookies.delete('refresh_token');
+    return response;
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/signup'],
+  matcher: [
+    '/dashboard/:path*',
+    '/login',
+    '/signup',
+    '/verify-otp',
+  ],
 };
-
-

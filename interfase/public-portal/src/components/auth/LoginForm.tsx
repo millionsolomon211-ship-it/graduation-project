@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { initKeycloak } from '@/lib/keycloak';
+import { setAuthCookiesClient, isEmailVerified } from '@/lib/auth-client';
 
 const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost/auth";
 const KEYCLOAK_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "public-citizen-portal";
@@ -22,9 +23,9 @@ export default function LoginForm() {
   useEffect(() => {
     // Optionally check if keycloak-js already has a session
     initKeycloak().then((kc) => {
-      if (kc?.authenticated) {
-        document.cookie = `auth_token=${kc.token}; path=/; max-age=3600`;
-        router.push('/dashboard');
+      if (kc?.authenticated && kc.token) {
+        setAuthCookiesClient(kc.token, kc.refreshToken);
+        router.push(isEmailVerified(kc.token) ? '/dashboard' : '/verify-otp');
       }
     });
   }, [router]);
@@ -44,6 +45,7 @@ export default function LoginForm() {
           client_id: KEYCLOAK_CLIENT_ID,
           username: formData.username,
           password: formData.password,
+          scope: 'openid email profile',
         }),
       });
 
@@ -53,10 +55,9 @@ export default function LoginForm() {
       }
 
       const data = await response.json();
-      
-      // Store token securely (cookie mechanism matches middleware)
-      document.cookie = `auth_token=${data.access_token}; path=/; max-age=3600`;
-      router.push('/dashboard');
+
+      setAuthCookiesClient(data.access_token, data.refresh_token);
+      router.push(isEmailVerified(data.access_token) ? '/dashboard' : '/verify-otp');
       
     } catch (err: any) {
       setError(err.message || 'Login failed. Please confirm Keycloak is running.');
