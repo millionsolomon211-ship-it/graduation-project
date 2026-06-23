@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const KC_URL    = process.env.NEXT_PUBLIC_KEYCLOAK_URL    || 'http://localhost:8080/auth';
+const KC_URL    = process.env.NEXT_PUBLIC_KEYCLOAK_URL    || 'http://localhost/auth';
 const KC_REALM  = process.env.NEXT_PUBLIC_KEYCLOAK_REALM  || 'public-citizen-portal';
 const KC_CLIENT = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'civilian-nextjs-web';
 const KC_ADMIN_USER = process.env.KEYCLOAK_ADMIN_USER || 'admin';

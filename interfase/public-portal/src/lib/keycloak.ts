@@ -1,7 +1,7 @@
 let keycloakInstance: any = null;
 
 const keycloakConfig = {
-  url: process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost:8080/auth',
+  url: process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth',
   realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'public-citizen-portal',
   clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'civilian-nextjs-web',
 };
