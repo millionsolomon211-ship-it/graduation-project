@@ -8,8 +8,43 @@
   "registrationEmailAsUsername": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
+  "verifyEmail": true,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
+  "smtpServer": {
+    "host": "smtp.gmail.com",
+    "port": "587",
+    "from": "millionsolomon211@gmail.com",
+    "fromDisplayName": "Citizen Portal",
+    "replyTo": "millionsolomon211@gmail.com",
+    "replyToDisplayName": "Citizen Portal",
+    "envelopeFrom": "",
+    "ssl": "false",
+    "starttls": "true",
+    "auth": "true",
+    "user": "millionsolomon211@gmail.com",
+    "password": "jjwp jdzp eetu zajm"
+  },
+  "requiredActions": [
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 50,
+      "config": {}
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30,
+      "config": {}
+    }
+  ],
   "clients": [
     {
       "clientId": "civilian-nextjs-web",

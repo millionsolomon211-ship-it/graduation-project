@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAdminToken,
+  findUserByEmail,
+  sendVerifyEmail,
   getClientIp,
 } from '@/lib/keycloak-admin';
 
@@ -38,6 +40,7 @@ export async function POST(req: NextRequest) {
           username: email,
           enabled: true,
           emailVerified: false,
+          requiredActions: ['VERIFY_EMAIL'],
           credentials: [{ type: 'password', value: password, temporary: false }],
         }),
       }
@@ -52,6 +55,14 @@ export async function POST(req: NextRequest) {
     if (!createRes.ok) {
       const body = await createRes.text();
       return NextResponse.json({ error: body || 'Registration failed.' }, { status: 400 });
+    }
+
+    const user = await findUserByEmail(adminToken, email, clientIp);
+    if (user) {
+      const sent = await sendVerifyEmail(adminToken, user.id, clientIp);
+      if (!sent) {
+        console.error('[register] Keycloak failed to send verification email');
+      }
     }
 
     const tokenRes = await fetch(

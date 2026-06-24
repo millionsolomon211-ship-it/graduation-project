@@ -1,14 +1,9 @@
 "use client";
 
-import { Suspense } from 'react';
 import RotatingBackground from '@/components/RotatingBackground';
-import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import VerifyEmailPending from '@/components/auth/VerifyEmailPending';
 
-function ResetPasswordContent() {
-  return <ResetPasswordForm />;
-}
-
-export default function ResetPasswordPage() {
+export default function VerifyEmailPage() {
   return (
     <div style={{
       minHeight: '100vh',
@@ -20,9 +15,7 @@ export default function ResetPasswordPage() {
       backgroundColor: '#08101f',
     }}>
       <RotatingBackground />
-      <Suspense fallback={null}>
-        <ResetPasswordContent />
-      </Suspense>
+      <VerifyEmailPending />
     </div>
   );
 }

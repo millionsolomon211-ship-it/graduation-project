@@ -25,7 +25,7 @@ export default function LoginForm() {
     initKeycloak().then((kc) => {
       if (kc?.authenticated && kc.token) {
         setAuthCookiesClient(kc.token, kc.refreshToken);
-        router.push(isEmailVerified(kc.token) ? '/dashboard' : '/verify-otp');
+        router.push(isEmailVerified(kc.token) ? '/dashboard' : '/verify-email');
       }
     });
   }, [router]);
@@ -57,7 +57,7 @@ export default function LoginForm() {
       const data = await response.json();
 
       setAuthCookiesClient(data.access_token, data.refresh_token);
-      router.push(isEmailVerified(data.access_token) ? '/dashboard' : '/verify-otp');
+      router.push(isEmailVerified(data.access_token) ? '/dashboard' : '/verify-email');
       
     } catch (err: any) {
       setError(err.message || 'Login failed. Please confirm Keycloak is running.');

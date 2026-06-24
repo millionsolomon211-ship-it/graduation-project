@@ -59,7 +59,7 @@ export default function SignupForm() {
       setSuccess(true);
       setTimeout(() => {
         if (data.autoLogin) {
-          router.push('/verify-otp');
+          router.push('/verify-email');
         } else {
           router.push('/login');
         }
@@ -211,7 +211,7 @@ export default function SignupForm() {
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 color: '#4ade80', fontSize: '0.85rem', margin: '0.25em 0' }}
             >
-              <CheckCircle size={16} /> Account created! Check your email…
+              <CheckCircle size={16} /> Account created! Check your email for the verification link…
             </motion.div>
           )}
         </AnimatePresence>

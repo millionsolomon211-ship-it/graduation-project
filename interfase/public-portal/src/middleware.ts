@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
   const isProtectedPath = pathname.startsWith('/dashboard');
   const isAuthPath =
     pathname.startsWith('/login') || pathname.startsWith('/signup');
-  const isVerifyOtpPath = pathname.startsWith('/verify-otp');
+  const isVerifyEmailPath = pathname.startsWith('/verify-email');
 
   const { valid: validToken, emailVerified } = await verifyAuthToken(token);
 
@@ -20,12 +20,12 @@ export async function middleware(request: NextRequest) {
       return response;
     }
     if (!emailVerified) {
-      return NextResponse.redirect(new URL('/verify-otp', request.url));
+      return NextResponse.redirect(new URL('/verify-email', request.url));
     }
     return NextResponse.next();
   }
 
-  if (isVerifyOtpPath) {
+  if (isVerifyEmailPath) {
     if (!validToken) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isAuthPath && validToken) {
-    const dest = emailVerified ? '/dashboard' : '/verify-otp';
+    const dest = emailVerified ? '/dashboard' : '/verify-email';
     return NextResponse.redirect(new URL(dest, request.url));
   }
 
@@ -55,6 +55,6 @@ export const config = {
     '/dashboard/:path*',
     '/login',
     '/signup',
-    '/verify-otp',
+    '/verify-email',
   ],
 };

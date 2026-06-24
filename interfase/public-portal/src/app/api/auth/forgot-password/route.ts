@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendPasswordResetOtp } from '@/lib/email';
-import {
-  generateOtp,
-  hashOtp,
-  getOtpExpiry,
-  OTP_ATTRIBUTES,
-} from '@/lib/otp';
 import {
   getAdminToken,
   findUserByEmail,
-  updateUser,
+  sendPasswordResetEmail,
   getClientIp,
 } from '@/lib/keycloak-admin';
 
@@ -24,27 +17,13 @@ export async function POST(req: NextRequest) {
     const adminToken = await getAdminToken(clientIp);
     const user = await findUserByEmail(adminToken, email, clientIp);
 
-    // Always return success to avoid email enumeration
-    if (!user) {
-      return NextResponse.json({
-        success: true,
-        message: 'If an account exists, a reset code has been sent.',
-      });
+    if (user) {
+      await sendPasswordResetEmail(adminToken, user.id, clientIp);
     }
-
-    const otp = generateOtp();
-    const attrs = {
-      ...(user.attributes || {}),
-      [OTP_ATTRIBUTES.reset.code]: [hashOtp(otp)],
-      [OTP_ATTRIBUTES.reset.expiry]: [getOtpExpiry()],
-    };
-
-    await updateUser(adminToken, user.id, { attributes: attrs }, clientIp);
-    await sendPasswordResetOtp(email, otp, user.firstName || undefined);
 
     return NextResponse.json({
       success: true,
-      message: 'If an account exists, a reset code has been sent.',
+      message: 'If an account exists, Keycloak has sent a password reset link to your email.',
     });
   } catch (err) {
     console.error('[forgot-password]', err);
