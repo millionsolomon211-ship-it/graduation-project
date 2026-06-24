@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { issueOtp } from '@/lib/otp-store';
+import { sendPasswordResetOtp } from '@/lib/email';
 import {
   getAdminToken,
   findUserByEmail,
-  sendPasswordResetEmail,
   getClientIp,
 } from '@/lib/keycloak-admin';
+
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,13 +20,14 @@ export async function POST(req: NextRequest) {
     const adminToken = await getAdminToken(clientIp);
     const user = await findUserByEmail(adminToken, email, clientIp);
 
-    if (user) {
-      await sendPasswordResetEmail(adminToken, user.id, clientIp);
+    if (user?.email) {
+      const otp = await issueOtp(user.id, user.email, 'password_reset');
+      await sendPasswordResetOtp(user.email, otp, user.firstName);
     }
 
     return NextResponse.json({
       success: true,
-      message: 'If an account exists, Keycloak has sent a password reset link to your email.',
+      message: 'If an account exists, a reset code has been sent.',
     });
   } catch (err) {
     console.error('[forgot-password]', err);

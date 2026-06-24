@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Loader2, KeyRound, CheckCircle, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Loader2, KeyRound, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +25,7 @@ export default function ForgotPasswordForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Request failed');
-      setSent(true);
+      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -53,53 +54,35 @@ export default function ForgotPasswordForm() {
         </div>
 
         <p className="uiverse-heading">Forgot Password</p>
+        <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.8rem', marginTop: '-0.75rem', marginBottom: '1rem' }}>
+          We&apos;ll email you a 6-digit reset code
+        </p>
 
-        {sent ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-              <Mail size={40} color="#00aaff" />
-            </div>
-            <p style={{ color: '#94a3b8', fontSize: '0.9em', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-              Keycloak sent a password reset link to <strong style={{ color: '#e2e8f0' }}>{email}</strong>.
-              Click the link in the email to set a new password.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#4ade80', fontSize: '0.85rem', marginBottom: '1rem' }}>
-              <CheckCircle size={16} /> Check your inbox
-            </div>
-          </div>
-        ) : (
-          <>
-            <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.8rem', marginTop: '-0.75rem', marginBottom: '1rem' }}>
-              Keycloak will email you a secure reset link
-            </p>
+        <div className="uiverse-field">
+          <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+          </svg>
+          <input
+            placeholder="Email Address"
+            className="uiverse-input-field"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-            <div className="uiverse-field">
-              <svg className="uiverse-input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
-              </svg>
-              <input
-                placeholder="Email Address"
-                className="uiverse-input-field"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            {error && (
-              <p style={{ color: '#ff6b6b', fontSize: '0.78rem', textAlign: 'center', margin: '0.25em 0' }}>{error}</p>
-            )}
-
-            <div className="uiverse-btn-group">
-              <button type="submit" disabled={loading} className="uiverse-button1">
-                {loading
-                  ? <Loader2 style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} size={18} />
-                  : 'Send Reset Link'}
-              </button>
-            </div>
-          </>
+        {error && (
+          <p style={{ color: '#ff6b6b', fontSize: '0.78rem', textAlign: 'center', margin: '0.25em 0' }}>{error}</p>
         )}
+
+        <div className="uiverse-btn-group">
+          <button type="submit" disabled={loading} className="uiverse-button1">
+            {loading
+              ? <Loader2 style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} size={18} />
+              : 'Send Reset Code'}
+          </button>
+        </div>
 
         <Link href="/login" style={{ textDecoration: 'none' }}>
           <button type="button" className="uiverse-button2" style={{ width: '100%' }}>

@@ -1,4 +1,4 @@
-# Get admin token
+# Patch realm: allow email login + disable Keycloak built-in verify (we use OTP)
 $body = "grant_type=password&client_id=admin-cli&username=admin&password=admin"
 $resp = Invoke-RestMethod `
   -Uri "http://localhost:8081/auth/realms/master/protocol/openid-connect/token" `
@@ -9,8 +9,14 @@ $resp = Invoke-RestMethod `
 $token = $resp.access_token
 Write-Host "Got admin token"
 
-# Patch realm so users can register and log in with email
-$patch = '{"loginWithEmailAllowed":true,"registrationEmailAsUsername":true,"registrationAllowed":true,"duplicateEmailsAllowed":false,"resetPasswordAllowed":true}'
+$patch = @{
+  loginWithEmailAllowed = $true
+  registrationEmailAsUsername = $true
+  registrationAllowed = $true
+  duplicateEmailsAllowed = $false
+  resetPasswordAllowed = $true
+  verifyEmail = $false
+} | ConvertTo-Json
 
 $headers = @{ Authorization = "Bearer $token" }
 
@@ -21,4 +27,4 @@ Invoke-RestMethod `
   -Headers $headers `
   -Body $patch
 
-Write-Host "Realm patched successfully"
+Write-Host "Realm patched (verifyEmail=false, OTP handled by portal)"

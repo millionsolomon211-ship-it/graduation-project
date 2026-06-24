@@ -8,7 +8,7 @@
   "registrationEmailAsUsername": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
-  "verifyEmail": true,
+  "verifyEmail": false,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
   "smtpServer": {

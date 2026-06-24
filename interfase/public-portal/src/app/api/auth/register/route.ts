@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getAdminToken,
   findUserByEmail,
-  sendVerifyEmail,
+  clearKeycloakEmailBlock,
+  loginWithPassword,
   getClientIp,
 } from '@/lib/keycloak-admin';
+import { issueOtp } from '@/lib/otp-store';
+import { sendVerificationOtp } from '@/lib/email';
 
-const KC_URL = process.env.KEYCLOAK_SERVER_URL || process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth';
-const KC_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'public-citizen-portal';
-const KC_CLIENT = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'civilian-nextjs-web';
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,9 +24,11 @@ export async function POST(req: NextRequest) {
 
     const clientIp = getClientIp(req.headers);
     const adminToken = await getAdminToken(clientIp);
+    const kcUrl = process.env.KEYCLOAK_SERVER_URL || process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth';
+    const kcRealm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'public-citizen-portal';
 
     const createRes = await fetch(
-      `${KC_URL}/admin/realms/${KC_REALM}/users`,
+      `${kcUrl}/admin/realms/${kcRealm}/users`,
       {
         method: 'POST',
         headers: {
@@ -40,7 +43,7 @@ export async function POST(req: NextRequest) {
           username: email,
           enabled: true,
           emailVerified: false,
-          requiredActions: ['VERIFY_EMAIL'],
+          requiredActions: [],
           credentials: [{ type: 'password', value: password, temporary: false }],
         }),
       }
@@ -58,41 +61,27 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await findUserByEmail(adminToken, email, clientIp);
-    if (user) {
-      const sent = await sendVerifyEmail(adminToken, user.id, clientIp);
-      if (!sent.ok) {
-        console.error('[register] Keycloak failed to send verification email:', sent.error);
+    if (user?.id) {
+      await clearKeycloakEmailBlock(adminToken, user.id, clientIp);
+
+      const otp = await issueOtp(user.id, email, 'email_verify');
+      try {
+        await sendVerificationOtp(email, otp, firstName);
+      } catch (emailErr) {
+        console.error('[register] OTP email failed:', emailErr);
       }
     }
 
-    const tokenRes = await fetch(
-      `${KC_URL}/realms/${KC_REALM}/protocol/openid-connect/token`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-Forwarded-For': clientIp,
-        },
-        body: new URLSearchParams({
-          grant_type: 'password',
-          client_id: KC_CLIENT,
-          username: email,
-          password,
-          scope: 'openid email profile',
-        }),
-      }
-    );
-
-    if (!tokenRes.ok) {
+    const login = await loginWithPassword(email, password, clientIp);
+    if (!login.ok || !login.tokens?.access_token) {
       return NextResponse.json({ success: true, autoLogin: false });
     }
 
-    const tokens = await tokenRes.json();
     return NextResponse.json({
       success: true,
       autoLogin: true,
-      token: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      token: login.tokens.access_token,
+      refreshToken: login.tokens.refresh_token,
     });
   } catch (err: unknown) {
     console.error('[register] Error:', err);

@@ -37,27 +37,23 @@ export default function LoginForm() {
     setLoading(true);
     
     try {
-      const response = await fetch(`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`, {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'password',
-          client_id: KEYCLOAK_CLIENT_ID,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           username: formData.username,
           password: formData.password,
-          scope: 'openid email profile',
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error_description || 'Invalid credentials');
-      }
-
       const data = await response.json();
 
-      setAuthCookiesClient(data.access_token, data.refresh_token);
-      router.push(isEmailVerified(data.access_token) ? '/dashboard' : '/verify-email');
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid credentials');
+      }
+
+      router.push(data.emailVerified ? '/dashboard' : '/verify-email');
       
     } catch (err: any) {
       setError(err.message || 'Login failed. Please confirm Keycloak is running.');

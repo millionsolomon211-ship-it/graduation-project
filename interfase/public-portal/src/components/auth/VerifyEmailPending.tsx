@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, Mail, CheckCircle } from 'lucide-react';
@@ -9,13 +9,30 @@ import { motion } from 'framer-motion';
 const RESEND_COOLDOWN = 60;
 
 export default function VerifyEmailPending() {
+  const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [emailHint, setEmailHint] = useState('');
-  const [resending, setResending] = useState(false);
-  const [checking, setChecking] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const [resent, setResent] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+
+  const sendOtp = useCallback(async () => {
+    setSending(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/resend-verify', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send code');
+      setCooldown(RESEND_COOLDOWN);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to send code');
+    } finally {
+      setSending(false);
+    }
+  }, []);
 
   useEffect(() => {
     const token = document.cookie
@@ -31,7 +48,8 @@ export default function VerifyEmailPending() {
         }
       } catch { /* ignore */ }
     }
-  }, []);
+    sendOtp();
+  }, [sendOtp]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -39,40 +57,61 @@ export default function VerifyEmailPending() {
     return () => clearTimeout(t);
   }, [cooldown]);
 
-  const handleResend = async () => {
-    setResending(true);
-    setError('');
-    setResent(false);
-    try {
-      const res = await fetch('/api/auth/resend-verify', { method: 'POST', credentials: 'include' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to resend email');
-      setResent(true);
-      setCooldown(RESEND_COOLDOWN);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to resend email');
-    } finally {
-      setResending(false);
+  const handleChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    const next = [...digits];
+    next[index] = value.slice(-1);
+    setDigits(next);
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleCheckVerified = async () => {
-    setChecking(true);
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const next = [...digits];
+    for (let i = 0; i < 6; i++) next[i] = pasted[i] || '';
+    setDigits(next);
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const otp = digits.join('');
+    if (otp.length !== 6) {
+      setError('Enter the full 6-digit code');
+      return;
+    }
+
+    setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/refresh-session', { method: 'POST', credentials: 'include' });
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp }),
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not refresh session');
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
 
-      if (data.emailVerified) {
-        router.push('/dashboard');
-      } else {
-        setError('Email not verified yet. Click the link in your inbox, then try again.');
+      if (data.requiresLogin) {
+        router.push('/login');
+        return;
       }
+
+      setSuccess(true);
+      setTimeout(() => router.push('/dashboard'), 1200);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Could not check verification status');
+      setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
-      setChecking(false);
+      setLoading(false);
     }
   };
 
@@ -83,7 +122,7 @@ export default function VerifyEmailPending() {
       transition={{ duration: 0.55, ease: 'easeOut' }}
       style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '400px' }}
     >
-      <div className="uiverse-form" style={{ textAlign: 'center' }}>
+      <form className="uiverse-form" onSubmit={handleSubmit}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5em' }}>
           <div style={{
             width: 52, height: 52,
@@ -96,47 +135,60 @@ export default function VerifyEmailPending() {
           </div>
         </div>
 
-        <p className="uiverse-heading">Verify Your Email</p>
-        <p style={{ color: '#94a3b8', fontSize: '0.85em', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-          Keycloak sent a verification link to{' '}
-          <strong style={{ color: '#e2e8f0' }}>{emailHint || 'your email'}</strong>.
-          Open the email and click the link to activate your account.
+        <p className="uiverse-heading">Verify Email</p>
+        <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.8rem', marginTop: '-0.75rem', marginBottom: '1rem' }}>
+          {sending ? 'Sending code…' : `Enter the 6-digit code sent to ${emailHint || 'your email'}`}
         </p>
 
+        <div
+          style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '0.5rem' }}
+          onPaste={handlePaste}
+        >
+          {digits.map((d, i) => (
+            <input
+              key={i}
+              ref={(el) => { inputRefs.current[i] = el; }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={d}
+              onChange={(e) => handleChange(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              className="uiverse-input-field"
+              style={{
+                width: 44, height: 48, textAlign: 'center', fontSize: '1.25rem',
+                padding: 0, borderRadius: 12, background: 'rgba(255,255,255,0.08)',
+              }}
+            />
+          ))}
+        </div>
+
         {error && (
-          <p style={{ color: '#ff6b6b', fontSize: '0.78rem', marginBottom: '0.75rem' }}>{error}</p>
+          <p style={{ color: '#ff6b6b', fontSize: '0.78rem', textAlign: 'center', margin: '0.25em 0' }}>{error}</p>
         )}
 
-        {resent && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#4ade80', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
-            <CheckCircle size={16} /> Verification email resent
+        {success && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#4ade80', fontSize: '0.85rem' }}>
+            <CheckCircle size={16} /> Verified! Redirecting…
           </div>
         )}
 
-        <button
-          type="button"
-          className="uiverse-button1"
-          style={{ width: '100%', marginBottom: '0.5rem' }}
-          disabled={checking}
-          onClick={handleCheckVerified}
-        >
-          {checking
-            ? <Loader2 style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} size={18} />
-            : "I've verified — continue"}
-        </button>
+        <div className="uiverse-btn-group">
+          <button type="submit" disabled={loading || success} className="uiverse-button1">
+            {loading
+              ? <Loader2 style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }} size={18} />
+              : 'Verify'}
+          </button>
+        </div>
 
         <button
           type="button"
           className="uiverse-button3"
           style={{ width: '100%' }}
-          disabled={cooldown > 0 || resending}
-          onClick={handleResend}
+          disabled={cooldown > 0 || sending}
+          onClick={sendOtp}
         >
-          {cooldown > 0
-            ? `Resend email in ${cooldown}s`
-            : resending
-              ? 'Sending…'
-              : 'Resend verification email'}
+          {cooldown > 0 ? `Resend code in ${cooldown}s` : sending ? 'Sending…' : 'Resend code'}
         </button>
 
         <Link href="/login" style={{ textDecoration: 'none' }}>
@@ -144,7 +196,7 @@ export default function VerifyEmailPending() {
             Back to Login
           </button>
         </Link>
-      </div>
+      </form>
     </motion.div>
   );
 }
