@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { setAuthCookies } from '@/lib/auth-tokens';
+import { setAuthCookies, verifyAuthToken, decodeAuthToken } from '@/lib/auth-tokens';
 import { refreshAccessToken } from '@/lib/keycloak-admin';
+
+export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,14 +16,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Session expired. Please log in again.' }, { status: 401 });
     }
 
-    const payload = JSON.parse(
-      Buffer.from(tokens.access_token.split('.')[1], 'base64url').toString()
-    );
+    let verified = await verifyAuthToken(tokens.access_token);
+    let emailVerified = verified.emailVerified;
 
-    const response = NextResponse.json({
-      success: true,
-      emailVerified: payload.email_verified === true,
-    });
+    if (!verified.valid) {
+      const decoded = decodeAuthToken(tokens.access_token);
+      emailVerified = decoded?.email_verified === true;
+    }
+
+    const response = NextResponse.json({ success: true, emailVerified });
     setAuthCookies(response, tokens.access_token, tokens.refresh_token);
     return response;
   } catch (err) {

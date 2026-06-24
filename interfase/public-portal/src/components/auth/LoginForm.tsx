@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { initKeycloak } from '@/lib/keycloak';
 import { setAuthCookiesClient, isEmailVerified } from '@/lib/auth-client';
 
-const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost/auth";
+const KEYCLOAK_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8081/auth";
 const KEYCLOAK_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "public-citizen-portal";
 const KEYCLOAK_CLIENT_ID = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "civilian-nextjs-web";
 

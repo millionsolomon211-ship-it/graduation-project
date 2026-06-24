@@ -1,4 +1,7 @@
-# Configure Keycloak SMTP + email verification for public-citizen-portal
+# Fix Keycloak SMTP for Gmail on port 587
+# CORRECT: StartTLS = ON, SSL = OFF
+# WRONG:   StartTLS = OFF, SSL = ON  (this causes "Failed to send email")
+
 $kcBase = "http://localhost:8081/auth"
 $realm = "public-citizen-portal"
 
@@ -32,6 +35,8 @@ $patch = @{
   }
 } | ConvertTo-Json -Depth 4
 
+Write-Host "Applying SMTP: ssl=false, starttls=true (required for Gmail port 587)..."
+
 Invoke-RestMethod `
   -Uri "$kcBase/admin/realms/$realm" `
   -Method PUT `
@@ -39,4 +44,10 @@ Invoke-RestMethod `
   -Headers $headers `
   -Body $patch
 
-Write-Host "SMTP + verifyEmail patched on realm '$realm'"
+Write-Host ""
+Write-Host "Done. In Keycloak Admin -> Realm Settings -> Email verify:"
+Write-Host "  Enable SSL      = OFF"
+Write-Host "  Enable StartTLS = ON"
+Write-Host "  Port            = 587"
+Write-Host ""
+Write-Host "Then click 'Test connection' again."

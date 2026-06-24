@@ -44,7 +44,7 @@ export default function VerifyEmailPending() {
     setError('');
     setResent(false);
     try {
-      const res = await fetch('/api/auth/resend-verify', { method: 'POST' });
+      const res = await fetch('/api/auth/resend-verify', { method: 'POST', credentials: 'include' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to resend email');
       setResent(true);
@@ -60,7 +60,7 @@ export default function VerifyEmailPending() {
     setChecking(true);
     setError('');
     try {
-      const res = await fetch('/api/auth/refresh-session', { method: 'POST' });
+      const res = await fetch('/api/auth/refresh-session', { method: 'POST', credentials: 'include' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not refresh session');
 

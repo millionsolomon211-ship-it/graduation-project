@@ -1,9 +1,25 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyAuthToken } from '@/lib/auth-tokens';
+import { verifyAuthToken, decodeAuthToken } from '@/lib/auth-tokens';
+
+async function getSession(token: string | undefined, hasRefresh: boolean) {
+  let result = await verifyAuthToken(token);
+  if (!result.valid && token && hasRefresh) {
+    const decoded = decodeAuthToken(token);
+    if (decoded?.sub) {
+      result = {
+        valid: true,
+        payload: decoded,
+        emailVerified: decoded.email_verified === true,
+      };
+    }
+  }
+  return result;
+}
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
+  const hasRefresh = !!request.cookies.get('refresh_token')?.value;
   const pathname = request.nextUrl.pathname;
 
   const isProtectedPath = pathname.startsWith('/dashboard');
@@ -11,7 +27,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/login') || pathname.startsWith('/signup');
   const isVerifyEmailPath = pathname.startsWith('/verify-email');
 
-  const { valid: validToken, emailVerified } = await verifyAuthToken(token);
+  const { valid: validToken, emailVerified } = await getSession(token, hasRefresh);
 
   if (isProtectedPath) {
     if (!validToken) {
