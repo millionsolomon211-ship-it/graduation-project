@@ -18,6 +18,7 @@ target/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.example
 
 # Keycloak binaries (Software distributions)
 keycloak-*/
@@ -61,3 +62,6 @@ Thumbs.db
 
 # API Gateway (Nginx binaries)
 API-getway/
+
+#AMD
+AUTHENTICATION.md
