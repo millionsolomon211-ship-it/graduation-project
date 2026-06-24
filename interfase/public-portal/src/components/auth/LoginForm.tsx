@@ -169,12 +169,6 @@ export default function LoginForm() {
               <button type="button" className="uiverse-button2">Sign Up</button>
             </Link>
           </div>
-
-          <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
-            <button type="button" className="uiverse-button3" style={{ width: '100%' }}>
-              Forgot Password
-            </button>
-          </Link>
         </form>
       </motion.div>
   );
