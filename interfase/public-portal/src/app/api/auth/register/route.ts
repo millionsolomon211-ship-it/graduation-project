@@ -6,7 +6,7 @@ import {
   getClientIp,
 } from '@/lib/keycloak-admin';
 
-const KC_URL = process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth';
+const KC_URL = process.env.KEYCLOAK_SERVER_URL || process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth';
 const KC_REALM = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'public-citizen-portal';
 const KC_CLIENT = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'civilian-nextjs-web';
 
@@ -60,8 +60,8 @@ export async function POST(req: NextRequest) {
     const user = await findUserByEmail(adminToken, email, clientIp);
     if (user) {
       const sent = await sendVerifyEmail(adminToken, user.id, clientIp);
-      if (!sent) {
-        console.error('[register] Keycloak failed to send verification email');
+      if (!sent.ok) {
+        console.error('[register] Keycloak failed to send verification email:', sent.error);
       }
     }
 

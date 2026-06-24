@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
     let verified = await verifyAuthToken(token);
     let userId = verified.payload?.sub as string | undefined;
 
-    // Fallback: session exists (refresh token) but JWKS verify failed (URL/proxy mismatch)
     if ((!verified.valid || !userId) && token && refreshToken) {
       const decoded = decodeAuthToken(token);
       if (decoded?.sub) {
@@ -39,11 +38,12 @@ export async function POST(req: NextRequest) {
 
     const clientIp = getClientIp(req.headers);
     const adminToken = await getAdminToken(clientIp);
-    const sent = await sendVerifyEmail(adminToken, userId, clientIp);
+    const result = await sendVerifyEmail(adminToken, userId, clientIp);
 
-    if (!sent) {
+    if (!result.ok) {
+      console.error('[resend-verify] Keycloak error:', result.error);
       return NextResponse.json(
-        { error: 'Keycloak could not send the verification email. Fix SMTP: port 587 needs StartTLS ON and SSL OFF.' },
+        { error: result.error || 'Keycloak could not send verification email' },
         { status: 500 }
       );
     }
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, message: 'Verification email sent by Keycloak' });
   } catch (err) {
     console.error('[resend-verify]', err);
-    return NextResponse.json({ error: 'Failed to resend verification email' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Failed to resend verification email';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -68,6 +68,19 @@
       },
       "protocol": "openid-connect",
       "fullScopeAllowed": true
+    },
+    {
+      "clientId": "portal-admin-service",
+      "name": "Portal Admin Service",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "portal-admin-secret",
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true
     }
   ],
   "roles": {
