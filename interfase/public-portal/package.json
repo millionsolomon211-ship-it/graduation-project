@@ -6,7 +6,10 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "db:init": "node scripts/ensure-db.js"
+    "db:init": "node scripts/ensure-db.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -27,10 +30,12 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "@vitest/coverage-v8": "^1.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "15.0.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vitest": "^1.0.0"
   }
 }

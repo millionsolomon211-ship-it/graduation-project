@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  getAdminToken,
-  findUserByEmail,
-  clearKeycloakEmailBlock,
-  loginWithPassword,
-  getClientIp,
-} from '@/lib/keycloak-admin';
-import { issueOtp } from '@/lib/otp-store';
-import { sendVerificationOtp } from '@/lib/email';
+import { getRegistrationService } from '@/modules/auth/infrastructure/di/Container';
 
 export const runtime = 'nodejs';
 
@@ -15,73 +7,24 @@ export async function POST(req: NextRequest) {
   try {
     const { firstName, lastName, email, password } = await req.json();
 
-    if (!firstName || !lastName || !email || !password) {
-      return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
-    }
-    if (password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
-    }
+    const registrationService = getRegistrationService();
+    const result = await registrationService.register({
+      firstName,
+      lastName,
+      email,
+      password,
+    });
 
-    const clientIp = getClientIp(req.headers);
-    const adminToken = await getAdminToken(clientIp);
-    const kcUrl = process.env.KEYCLOAK_SERVER_URL || process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost/auth';
-    const kcRealm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'public-citizen-portal';
-
-    const createRes = await fetch(
-      `${kcUrl}/admin/realms/${kcRealm}/users`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`,
-          'X-Forwarded-For': clientIp,
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          username: email,
-          enabled: true,
-          emailVerified: false,
-          requiredActions: [],
-          credentials: [{ type: 'password', value: password, temporary: false }],
-        }),
-      }
-    );
-
-    if (createRes.status === 409) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists.' },
-        { status: 409 }
-      );
-    }
-    if (!createRes.ok) {
-      const body = await createRes.text();
-      return NextResponse.json({ error: body || 'Registration failed.' }, { status: 400 });
+    if (!result.success) {
+      const status = result.error?.includes('already exists') ? 409 : 400;
+      return NextResponse.json({ error: result.error }, { status });
     }
 
-    const user = await findUserByEmail(adminToken, email, clientIp);
-    if (user?.id) {
-      await clearKeycloakEmailBlock(adminToken, user.id, clientIp);
-
-      const otp = await issueOtp(user.id, email, 'email_verify');
-      try {
-        await sendVerificationOtp(email, otp, firstName);
-      } catch (emailErr) {
-        console.error('[register] OTP email failed:', emailErr);
-      }
-    }
-
-    const login = await loginWithPassword(email, password, clientIp);
-    if (!login.ok || !login.tokens?.access_token) {
-      return NextResponse.json({ success: true, autoLogin: false });
-    }
-
+    // Registration successful - user must now login via Keycloak
     return NextResponse.json({
       success: true,
-      autoLogin: true,
-      token: login.tokens.access_token,
-      refreshToken: login.tokens.refresh_token,
+      message: 'Registration successful. Please check your email for verification code.',
+      requiresLogin: true,
     });
   } catch (err: unknown) {
     console.error('[register] Error:', err);

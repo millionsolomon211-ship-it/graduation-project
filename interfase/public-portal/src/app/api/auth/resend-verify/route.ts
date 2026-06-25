@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth-session';
-import { issueOtp } from '@/lib/otp-store';
-import { sendVerificationOtp } from '@/lib/email';
-import { getAdminToken, getUserById, getClientIp } from '@/lib/keycloak-admin';
+import { getEmailVerificationService } from '@/modules/auth/infrastructure/di/Container';
+import { getEmailRepository } from '@/modules/auth/infrastructure/di/Container';
+import { getUserRepository } from '@/modules/auth/infrastructure/di/Container';
 
 export const runtime = 'nodejs';
 
@@ -19,12 +19,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No email on account' }, { status: 400 });
     }
 
-    const clientIp = getClientIp(req.headers);
-    const adminToken = await getAdminToken(clientIp);
-    const user = await getUserById(adminToken, session.userId, clientIp);
+    const emailVerificationService = getEmailVerificationService();
+    const result = await emailVerificationService.resendVerification(
+      session.userId,
+      session.email,
+      ''
+    );
 
-    const otp = await issueOtp(session.userId, session.email, 'email_verify');
-    await sendVerificationOtp(session.email, otp, user?.firstName);
+    if (!result.success || !result.otp) {
+      return NextResponse.json({ error: result.error || 'Failed to generate verification code' }, { status: 500 });
+    }
+
+    // Get user details for email
+    const userRepository = getUserRepository();
+    const user = await userRepository.findById(session.userId);
+
+    // Send email
+    const emailRepository = getEmailRepository();
+    await emailRepository.sendVerificationEmail(session.email, result.otp, user?.firstName || '');
 
     return NextResponse.json({ success: true, message: 'Verification code sent' });
   } catch (err) {

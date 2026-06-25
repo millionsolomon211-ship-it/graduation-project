@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decodeJwt } from 'jose';
 import { setAuthCookies } from '@/lib/auth-tokens';
-import { loginWithPassword, getClientIp } from '@/lib/keycloak-admin';
+import { getLoginService } from '@/modules/auth/infrastructure/di/Container';
 
 export const runtime = 'nodejs';
 
@@ -12,22 +11,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const clientIp = getClientIp(req.headers);
-    const result = await loginWithPassword(username, password, clientIp);
+    const loginService = getLoginService();
+    const result = await loginService.login({ username, password });
 
-    if (!result.ok || !result.tokens?.access_token) {
+    if (!result.success || !result.tokens) {
       return NextResponse.json(
         { error: result.error || 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    let emailVerified = false;
-    try {
-      emailVerified = decodeJwt(result.tokens.access_token).email_verified === true;
-    } catch { /* ignore */ }
-
-    const response = NextResponse.json({ success: true, emailVerified });
+    const response = NextResponse.json({ success: true, emailVerified: result.emailVerified });
     setAuthCookies(response, result.tokens.access_token, result.tokens.refresh_token);
     return response;
   } catch (err) {
