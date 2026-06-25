@@ -4,11 +4,13 @@ import { OTP, CreateOTPCommand, VerifyOTPCommand, OTPType } from './OTP';
 describe('OTP Entity', () => {
   describe('OTPType', () => {
     it('should have email_verify type', () => {
-      expect('email_verify'). satisfies OTPType;
+      const type: OTPType = 'email_verify';
+      expect(type).toBe('email_verify');
     });
 
     it('should have password_reset type', () => {
-      expect('password_reset'). satisfies OTPType;
+      const type: OTPType = 'password_reset';
+      expect(type).toBe('password_reset');
     });
   });
 
